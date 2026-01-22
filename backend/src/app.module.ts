@@ -5,6 +5,10 @@ import { AlertsModule } from './alerts/alerts.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { RequestLoggerMiddleware } from './common/middleware/request-logger.middleware';
+import { FinnhubModule } from './finnhub/finnhub.module';
+import { APP_GUARD } from '@nestjs/core';
+import { JwtAuthGuard } from './auth/auth.guard';
+import { MarketModule } from './market/market.module';
 
 @Module({
   imports: [
@@ -13,6 +17,14 @@ import { RequestLoggerMiddleware } from './common/middleware/request-logger.midd
     AlertsModule,
     AuthModule,
     UsersModule,
+    FinnhubModule,
+    MarketModule,
+  ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
   ],
 })
 export class AppModule implements NestModule {

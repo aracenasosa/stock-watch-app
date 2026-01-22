@@ -6,14 +6,14 @@ import {
   Param,
   Post,
   Req,
-  UseGuards,
 } from '@nestjs/common';
 import { AlertsService } from './alerts.service';
 import { CreateAlertDto } from './dto/create-alert.dto';
-import { JwtAuthGuard } from '../auth/auth.guard';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 @Controller('alerts')
-@UseGuards(JwtAuthGuard)
+@ApiBearerAuth('bearer')
+@ApiTags('Alerts')
 export class AlertsController {
   constructor(private alerts: AlertsService) {}
 
