@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { FinnhubService } from '../finnhub/finnhub.service';
+import { firstValueFrom } from 'rxjs';
+import { HttpService } from '@nestjs/axios';
 
 type QuoteResult =
   | { symbol: string; ok: true; data: any }
@@ -7,7 +9,14 @@ type QuoteResult =
 
 @Injectable()
 export class MarketService {
-  constructor(private readonly finnhub: FinnhubService) {}
+  constructor(
+    private readonly finnhub: FinnhubService,
+    private readonly http: HttpService,
+  ) {}
+
+  private readonly baseUrl =
+    process.env.FINNHUB_BASE_URL ?? 'https://finnhub.io/api/v1';
+  private readonly apiKey = process.env.FINNHUB_API_KEY ?? '';
 
   private normalize(symbol: string) {
     return symbol.trim().toUpperCase();
@@ -47,5 +56,17 @@ export class MarketService {
     );
 
     return results;
+  }
+
+  async getQuote(symbol: string): Promise<{ c: number }> {
+    const sym = symbol.trim().toUpperCase();
+
+    const { data } = await firstValueFrom(
+      this.http.get(`${this.baseUrl}/quote`, {
+        params: { symbol: sym, token: this.apiKey },
+      }),
+    );
+
+    return data;
   }
 }
