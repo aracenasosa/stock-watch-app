@@ -9,6 +9,9 @@ import { FinnhubModule } from './finnhub/finnhub.module';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './auth/auth.guard';
 import { MarketModule } from './market/market.module';
+import { DevicesModule } from './device/devices.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { FirebaseModule } from './firebase/firebase.module';
 
 @Module({
   imports: [
@@ -19,6 +22,9 @@ import { MarketModule } from './market/market.module';
     UsersModule,
     FinnhubModule,
     MarketModule,
+    DevicesModule,
+    NotificationsModule,
+    FirebaseModule,
   ],
   providers: [
     {

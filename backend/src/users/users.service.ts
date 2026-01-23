@@ -13,9 +13,7 @@ export class UsersService {
     });
   }
 
-  async findByAuth0Sub(auth0Sub: string) {
-    return this.prisma.user.findUnique({
-      where: { auth0Sub },
-    });
+  async getAllUsers() {
+    return this.prisma.user.findMany();
   }
 }

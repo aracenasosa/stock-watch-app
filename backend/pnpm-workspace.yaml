@@ -1,9 +1,12 @@
 packages:
-  - '.'
+  - .
+
 onlyBuiltDependencies:
-  - '@prisma/engines'
-  - 'prisma'
-  - 'better-sqlite3'
+  - '@firebase/util'
   - '@nestjs/core'
+  - '@prisma/engines'
   - '@scarf/scarf'
-  - 'unrs-resolver'
+  - better-sqlite3
+  - prisma
+  - protobufjs
+  - unrs-resolver

@@ -10,4 +10,9 @@ export class UsersController {
     const auth0Sub = req.user.sub;
     return this.usersService.ensureUser(auth0Sub);
   }
+
+  @Get()
+  async getAllUsers() {
+    return this.usersService.getAllUsers();
+  }
 }
