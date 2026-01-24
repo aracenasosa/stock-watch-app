@@ -3,6 +3,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { RegisterDeviceDto } from './dto/register-device.dto';
 import { DevicesService } from './devices.service';
 import { UsersService } from 'src/users/users.service';
+import type { AuthenticatedRequest } from 'src/auth/types/jwt.types';
 
 @ApiTags('devices')
 @ApiBearerAuth('bearer')
@@ -14,23 +15,26 @@ export class DevicesController {
   ) {}
 
   @Post('register')
-  async register(@Req() req: any, @Body() dto: RegisterDeviceDto) {
-    const sub = req.user?.sub ?? 'dev-user';
-    const user = await this.users.ensureUser(sub);
+  async register(
+    @Req() req: AuthenticatedRequest,
+    @Body() dto: RegisterDeviceDto,
+  ) {
+    const user = await this.users.ensureUser(req.user);
     return this.devices.register(user.id, dto.token, dto.platform);
   }
 
   @Delete('unregister')
-  async unregister(@Req() req: any, @Body() dto: { token: string }) {
-    const sub = req.user?.sub ?? 'dev-user';
-    const user = await this.users.ensureUser(sub);
+  async unregister(
+    @Req() req: AuthenticatedRequest,
+    @Body() dto: { token: string },
+  ) {
+    const user = await this.users.ensureUser(req.user);
     return this.devices.unregister(user.id, dto.token);
   }
 
   @Get()
-  async list(@Req() req: any) {
-    const sub = req.user?.sub ?? 'dev-user';
-    const user = await this.users.ensureUser(sub);
+  async list(@Req() req: AuthenticatedRequest) {
+    const user = await this.users.ensureUser(req.user);
     return this.devices.list(user.id);
   }
 }

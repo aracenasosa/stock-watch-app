@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { UsersService } from '../users/users.service';
+import type { JwtPayload } from '../auth/types/jwt.types';
 
 @Injectable()
 export class DevicesService {
@@ -9,31 +10,25 @@ export class DevicesService {
     private readonly usersService: UsersService,
   ) {}
 
-  async register(userSub: string, token: string, platform: string) {
-    const user = await this.usersService.ensureUser(userSub);
-
+  async register(userId: string, token: string, platform: string) {
     return this.prisma.deviceToken.upsert({
       where: { token },
-      create: { token, platform, userId: user.id },
-      update: { platform, userId: user.id },
+      create: { token, platform, userId },
+      update: { platform, userId },
     });
   }
 
-  async list(userSub: string) {
-    const user = await this.usersService.ensureUser(userSub);
-
+  async list(userId: string) {
     return this.prisma.deviceToken.findMany({
-      where: { userId: user.id },
+      where: { userId },
       select: { id: true, token: true, platform: true, updatedAt: true },
       orderBy: { updatedAt: 'desc' },
     });
   }
 
-  async unregister(userSub: string, token: string) {
-    const user = await this.usersService.ensureUser(userSub);
-
+  async unregister(userId: string, token: string) {
     const existing = await this.prisma.deviceToken.findFirst({
-      where: { token, userId: user.id },
+      where: { token, userId },
       select: { id: true },
     });
 

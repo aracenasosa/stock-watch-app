@@ -5,11 +5,21 @@ import { PrismaService } from '../prisma/prisma.service';
 export class UsersService {
   constructor(private prisma: PrismaService) {}
 
-  async ensureUser(auth0Sub: string) {
+  async ensureUser(params: { sub: string; email?: string; name?: string }) {
+    const { sub, email, name } = params;
+
     return this.prisma.user.upsert({
-      where: { auth0Sub },
-      update: {},
-      create: { auth0Sub },
+      where: { auth0Sub: sub },
+      update: {
+        // only update if provided
+        ...(email ? { email } : {}),
+        ...(name ? { name } : {}),
+      },
+      create: {
+        auth0Sub: sub,
+        email,
+        name,
+      },
     });
   }
 

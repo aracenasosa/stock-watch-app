@@ -9,6 +9,7 @@ import { UsersService } from '../users/users.service';
 import { NotificationsService } from 'src/notifications/notifications.service';
 import { CreateAlertDto } from './dto/create-alert.dto';
 import { UpdateAlertDto } from './dto/update-alert-dto';
+import type { JwtPayload } from 'src/auth/types/jwt.types';
 
 @Injectable()
 export class AlertsService {
@@ -18,8 +19,8 @@ export class AlertsService {
     private notifications: NotificationsService,
   ) {}
 
-  async create(userSub: string, dto: CreateAlertDto) {
-    const user = await this.usersService.ensureUser(userSub);
+  async create(userPayload: JwtPayload, dto: CreateAlertDto) {
+    const user = await this.usersService.ensureUser(userPayload);
 
     const symbol = dto.symbol.trim().toUpperCase();
     const targetPrice = dto.targetPrice;
@@ -42,8 +43,8 @@ export class AlertsService {
     }
   }
 
-  async list(auth0Sub: string) {
-    const user = await this.usersService.ensureUser(auth0Sub);
+  async list(userPayload: JwtPayload) {
+    const user = await this.usersService.ensureUser(userPayload);
 
     return this.prisma.alert.findMany({
       where: { userId: user.id },
@@ -51,9 +52,9 @@ export class AlertsService {
     });
   }
 
-  // ✅ Make delete consistent: accept userSub, resolve user, then check ownership
-  async delete(userSub: string, alertId: string) {
-    const user = await this.usersService.ensureUser(userSub);
+  // ✅ Make delete consistent: accept userPayload, resolve user, then check ownership
+  async delete(userPayload: JwtPayload, alertId: string) {
+    const user = await this.usersService.ensureUser(userPayload);
 
     const alert = await this.prisma.alert.findFirst({
       where: { id: alertId, userId: user.id },
@@ -66,7 +67,7 @@ export class AlertsService {
     return { success: true };
   }
 
-  async update(userSub: string, alertId: string, dto: UpdateAlertDto) {
+  async update(userPayload: JwtPayload, alertId: string, dto: UpdateAlertDto) {
     // validate input BEFORE DB
     const data: { symbol?: string; targetPrice?: number } = {};
 
@@ -93,7 +94,7 @@ export class AlertsService {
       );
     }
 
-    const user = await this.usersService.ensureUser(userSub);
+    const user = await this.usersService.ensureUser(userPayload);
 
     const existing = await this.prisma.alert.findFirst({
       where: { id: alertId, userId: user.id },

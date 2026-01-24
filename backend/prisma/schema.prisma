@@ -15,12 +15,13 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  auth0Sub  String   @unique
-  createdAt DateTime @default(now())
-
-  alerts  Alert[]
-  devices DeviceToken[]
+  id        String        @id @default(cuid())
+  auth0Sub  String        @unique
+  createdAt DateTime      @default(now())
+  name      String?
+  email     String?       @unique
+  alerts    Alert[]
+  devices   DeviceToken[]
 }
 
 model Alert {

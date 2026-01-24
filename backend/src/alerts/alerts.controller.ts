@@ -12,6 +12,7 @@ import { AlertsService } from './alerts.service';
 import { CreateAlertDto } from './dto/create-alert.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { UpdateAlertDto } from './dto/update-alert-dto';
+import type { AuthenticatedRequest } from 'src/auth/types/jwt.types';
 
 @Controller('alerts')
 @ApiBearerAuth('bearer')
@@ -20,30 +21,26 @@ export class AlertsController {
   constructor(private alerts: AlertsService) {}
 
   @Post()
-  create(@Req() req: any, @Body() dto: CreateAlertDto) {
-    const userSub = req.user?.sub ?? 'dev-user';
-    return this.alerts.create(userSub, dto);
+  create(@Req() req: AuthenticatedRequest, @Body() dto: CreateAlertDto) {
+    return this.alerts.create(req.user, dto);
   }
 
   @Get()
-  list(@Req() req: any) {
-    const userSub = req.user?.sub ?? 'dev-user';
-    return this.alerts.list(userSub);
+  list(@Req() req: AuthenticatedRequest) {
+    return this.alerts.list(req.user);
   }
 
   @Delete(':id')
-  delete(@Req() req: any, @Param('id') id: string) {
-    const userSub = req.user?.sub ?? 'dev-user';
-    return this.alerts.delete(userSub, id);
+  delete(@Req() req: AuthenticatedRequest, @Param('id') id: string) {
+    return this.alerts.delete(req.user, id);
   }
 
   @Patch(':id')
   update(
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
     @Param('id') id: string,
     @Body() dto: UpdateAlertDto,
   ) {
-    const userSub = req.user?.sub ?? 'dev-user';
-    return this.alerts.update(userSub, id, dto);
+    return this.alerts.update(req.user, id, dto);
   }
 }
