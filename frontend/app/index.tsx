@@ -1,11 +1,14 @@
-import { Text, View } from "react-native";
+import { Redirect } from 'expo-router';
+import { useAuthStore } from '@/stores/auth.store';
 
 export default function Index() {
-  return (
-     <View className="flex-1 items-center justify-center bg-white">
-      <Text className="text-xl font-bold text-blue-500">
-        Welcome to Nativewind!
-      </Text>
-    </View>
+  const { isHydrated, tokens } = useAuthStore();
+
+  if (!isHydrated) return null;
+
+  return tokens?.accessToken ? (
+    <Redirect href="/(tabs)/watchlist" />
+  ) : (
+    <Redirect href="/(auth)/login" />   
   );
 }

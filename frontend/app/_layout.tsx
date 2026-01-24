@@ -1,6 +1,15 @@
 import "./global.css"
-import { Stack } from "expo-router";
+import { Stack } from 'expo-router';
+import { useEffect } from 'react';
+import { useAuthStore } from '@/stores/auth.store';
 
 export default function RootLayout() {
-  return <Stack />;
+  const hydrate = useAuthStore((s) => s.hydrate);
+
+  useEffect(() => {
+    hydrate();
+  }, [hydrate]);
+
+  return <Stack screenOptions={{ headerShown: false }} />;
 }
+
