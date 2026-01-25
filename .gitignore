@@ -58,3 +58,13 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+
+# Expo generated native folders
+frontend/android
+frontend/ios
+
+# Prisma SQLite DB
+backend/data/dev.db
+
+# Local WS test client
+test-ws
