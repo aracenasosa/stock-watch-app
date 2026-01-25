@@ -1,15 +1,22 @@
 import { View, Text, Pressable, ActivityIndicator } from 'react-native';
 import { useState } from 'react';
+import { useRouter } from 'expo-router';
 import { useAuthStore } from '@/stores/auth.store';
 
 export default function LoginScreen() {
   const login = useAuthStore((s) => s.login);
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
 
   const onLogin = async () => {
     try {
       setLoading(true);
       await login();
+      // Navigate to watchlist after successful login
+      router.replace('/(tabs)/watchlist');
+    } catch (error) {
+      console.error('[LoginScreen] Login failed:', error);
+      // Error is already logged in auth store, just stop loading
     } finally {
       setLoading(false);
     }
