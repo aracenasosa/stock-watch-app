@@ -72,12 +72,47 @@ export class FinnhubGateway
   }
 
   // Lifecycle
-  onModuleInit() {
+  async onModuleInit() {
     this.connectFinnhub();
+
+    // Initial load of alert symbols
+    await this.refreshGlobalSubs();
+
+    // Periodically refresh global subs to catch any new alerts or cleanup old ones
+    setInterval(() => this.refreshGlobalSubs(), 5 * 60 * 1000); // Every 5 mins
 
     const enabled = this.envBool('QUOTE_FALLBACK_ENABLED', true);
     if (enabled) this.startQuoteFallback();
     else this.logger.log('Quote fallback polling disabled via env');
+  }
+
+  /**
+   * Queries the AlertsService for all symbols that have active alerts
+   * and ensures the Gateway is subscribed to them on Finnhub.
+   */
+  private async refreshGlobalSubs() {
+    try {
+      const alertSymbols = await this.alerts.getUniqueAlertSymbols();
+      this.logger.log(
+        `[FINNHUB] Refreshing global alert subs: ${alertSymbols.length} symbols`,
+      );
+
+      for (const sym of alertSymbols) {
+        if (!this.finnhubSubs.has(sym)) {
+          this.finnhubSubs.add(sym);
+          if (this.finnhubWs && this.isConnected) {
+            this.finnhubWs.send(
+              JSON.stringify({ type: 'subscribe', symbol: sym }),
+            );
+          }
+        }
+      }
+
+      // We don't remove symbols here; cleanupFinnhubSubs handles removal
+      // by checking both client subscriptions AND active alerts.
+    } catch (error) {
+      this.logger.error('Failed to refresh global alert subs', error);
+    }
   }
 
   onModuleDestroy() {
@@ -117,9 +152,9 @@ export class FinnhubGateway
     });
   }
 
-  handleDisconnect(client: any) {
+  async handleDisconnect(client: any) {
     this.clientSubs.delete(client);
-    this.cleanupFinnhubSubs();
+    await this.cleanupFinnhubSubs();
   }
 
   private isClientMsg(v: unknown): v is ClientMsg {
@@ -156,7 +191,7 @@ export class FinnhubGateway
     this.finnhubWs.on('message', (raw) => {
       const msg = raw.toString();
       this.handleFinnhubMessage(msg);
-      console.log('[FINNHUB] msg', msg.slice(0, 200));
+      this.logger.log(`[FINNHUB] msg ${msg.slice(0, 200)}`);
     });
 
     this.finnhubWs.on('close', () => {
@@ -236,6 +271,7 @@ export class FinnhubGateway
             type: 'quote',
             symbol,
             price,
+            prevClose: quote.pc,
             ts: Date.now(),
             source: 'poll',
           });
@@ -263,7 +299,7 @@ export class FinnhubGateway
   }
 
   // Client messages
-  private handleClientMessage(body: ClientMsg, client: any) {
+  private async handleClientMessage(body: ClientMsg, client: any) {
     const symbol = body.symbol.trim().toUpperCase();
     if (!symbol) return;
 
@@ -287,7 +323,7 @@ export class FinnhubGateway
     if (body.type === 'unsubscribe') {
       subs.delete(symbol);
       client.send(JSON.stringify({ type: 'unsubscribed', symbol }));
-      this.cleanupFinnhubSubs();
+      await this.cleanupFinnhubSubs();
     }
   }
 
@@ -298,10 +334,20 @@ export class FinnhubGateway
     return this.clientSubs.get(client)!;
   }
 
-  private cleanupFinnhubSubs() {
+  private async cleanupFinnhubSubs() {
     const needed = new Set<string>();
+
+    // 1. Symbols needed by connected clients
     for (const subs of this.clientSubs.values()) {
       for (const sym of subs) needed.add(sym);
+    }
+
+    // 2. Symbols with active alerts (must stay monitored)
+    try {
+      const alertSymbols = await this.alerts.getUniqueAlertSymbols();
+      for (const sym of alertSymbols) needed.add(sym);
+    } catch (e) {
+      this.logger.error('Failed to fetch alert symbols during cleanup', e);
     }
 
     for (const sym of Array.from(this.finnhubSubs)) {

@@ -52,7 +52,7 @@ export class AlertsService {
     });
   }
 
-  // ✅ Make delete consistent: accept userPayload, resolve user, then check ownership
+  // Make delete consistent: accept userPayload, resolve user, then check ownership
   async delete(userPayload: JwtPayload, alertId: string) {
     const user = await this.usersService.ensureUser(userPayload);
 
@@ -122,7 +122,7 @@ export class AlertsService {
   }
 
   async evaluateTick(symbol: string, price: number) {
-    // ✅ Defensive normalization
+    // Defensive normalization
     const sym = symbol.trim().toUpperCase();
 
     const alerts = await this.prisma.alert.findMany({
@@ -141,7 +141,7 @@ export class AlertsService {
       data: { isTriggered: true, triggeredAt: new Date() },
     });
 
-    // ✅ Small professional improvement: reduce spam by deduping per user
+    // Small professional improvement: reduce spam by deduping per user
     // (still sends at least one notification per user)
     const byUser = new Map<string, { maxTarget: number; alertId: string }>();
     for (const a of alerts) {
@@ -164,5 +164,18 @@ export class AlertsService {
     );
 
     return { triggered: alerts.length };
+  }
+
+  /**
+   * Returns all unique symbols that have at least one active (non-triggered) alert.
+   * This is used by the FinnhubGateway to ensure we monitor these symbols globally.
+   */
+  async getUniqueAlertSymbols(): Promise<string[]> {
+    const alerts = await this.prisma.alert.findMany({
+      where: { isTriggered: false },
+      select: { symbol: true },
+      distinct: ['symbol'],
+    });
+    return alerts.map((a) => a.symbol);
   }
 }

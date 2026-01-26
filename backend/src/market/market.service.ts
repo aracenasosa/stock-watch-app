@@ -1,5 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { FinnhubService } from '../finnhub/finnhub.service';
+import {
+  FinnhubCandles,
+  FinnhubQuote,
+  FinnhubSymbol,
+} from '../finnhub/types/finnhub.types';
 import { firstValueFrom } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
 
@@ -58,7 +63,7 @@ export class MarketService {
     return results;
   }
 
-  async getQuote(symbol: string): Promise<{ c: number }> {
+  async getQuote(symbol: string): Promise<FinnhubQuote> {
     const sym = symbol.trim().toUpperCase();
 
     const { data } = await firstValueFrom(

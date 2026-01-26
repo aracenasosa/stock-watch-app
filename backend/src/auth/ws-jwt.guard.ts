@@ -27,7 +27,7 @@ export class WsJwtGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const client = context.switchToWs().getClient();
 
-    const token = this.getTokenFromUrl(client?.upgradeReq?.url);
+    const token = this.getTokenFromUrl(client?.url || client?.upgradeReq?.url);
     if (!token) throw new UnauthorizedException('Missing WS token');
 
     const headerJson = Buffer.from(token.split('.')[0], 'base64url').toString(

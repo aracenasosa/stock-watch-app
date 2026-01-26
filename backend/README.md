@@ -4,68 +4,9 @@ A backend service that provides real-time stock price updates, price alerts, and
 
 The system uses a hybrid real-time strategy: WebSocket streaming when available, with a REST polling fallback to ensure reliability.
 
-Key Features
-Real-time Market Updates
+# Setup
 
-Streams live trades from Finnhub WebSocket.
-
-Supports subscribe / unsubscribe per symbol over WebSocket.
-
-Automatically reconnects and re-subscribes on WS disconnects.
-
-Quote Fallback (Reliability)
-
-Finnhub WebSocket can be idle (pings only, no trades).
-
-A configurable polling fallback fetches real-time quotes at a fixed interval.
-
-Ensures:
-
-UI keeps updating
-
-Alerts still trigger
-
-App doesn’t appear frozen
-
-This fallback can be enabled/disabled via environment variables.
-
-Price Alerts
-
-Users can create alerts for a symbol and target price.
-
-Alerts trigger when price reaches or exceeds the target.
-
-Triggered alerts cannot be updated.
-
-Duplicate active alerts (same symbol + price) are prevented.
-
-Push Notifications (FCM)
-
-Mobile devices can be registered per user.
-
-When an alert triggers, notifications are sent to all user devices.
-
-Invalid FCM tokens are automatically cleaned up.
-
-Authentication
-
-Uses Auth0 JWTs for HTTP and WebSocket authentication.
-
-Global JWT guard with support for public routes.
-
-Project Structure (simplified)
-src/
-├── alerts/ # Alert CRUD + evaluation
-├── auth/ # JWT strategies & guards
-├── devices/ # Device token registration (FCM)
-├── finnhub/ # WebSocket gateway + fallback logic
-├── market/ # Finnhub REST API access
-├── notifications/ # Firebase Cloud Messaging
-├── users/ # User provisioning (Auth0 sub)
-├── prisma/ # Prisma service & schema
-└── main.ts
-
-Environment Variables
+## Environment Variables
 
 Create a .env file:
 
@@ -104,9 +45,10 @@ FCM_PROJECT_ID=your_project_id
 FCM_CLIENT_EMAIL=your_service_account_email
 FCM_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
 
-Running the Project
+Running the Project (Prisma Setup)
 pnpm install or npm install
 pnpm prisma migrate dev or npm run prisma migrate dev
+pnpx prisma generate or npx prisma generate
 pnpm start:dev or npm run start:dev
 
 Swagger documentation will be available at:
@@ -203,3 +145,130 @@ which still fulfills the requirement of displaying stock price movement.
 
 ![Finnhub API Plan Details](./readmeImages/stock_candle_paid.png)
 ![UI Real-time Visualization](./readmeImages/finnhub_doesnt_access.png)
+
+## Finnhub WebSocket messages
+
+This project connects to the Finnhub WebSocket API to receive real-time market data.
+During development, basic logs are used to verify connection status and message flow.
+
+---
+
+### Finnhub WebSocket message types
+
+#### `ping`
+
+```json
+{ "type": "ping" }
+```
+
+- Sent periodically by Finnhub
+- Confirms the WebSocket connection is alive
+- No action required
+
+Logged as:
+
+```
+[FINNHUB] msg {"type":"ping"}
+```
+
+#### `trade`
+
+```json
+{ "type": "trade" }
+```
+
+s: symbol
+p: price
+t: timestamp (ms)
+v: volume
+
+Used to:
+
+- Update live prices
+- Trigger alert evaluation
+- Feed charts or real-time UI
+
+Logged as:
+
+```
+[FINNHUB] msg {"type":"trade"}
+```
+
+```json
+{
+  "type": "trade",
+  "data": [
+    {
+      "s": "AAPL", // Symbol
+      "p": 189.42, // Price
+      "t": 1706112345678, // Timestamp
+      "v": 120 // Volume
+    }
+  ]
+}
+```
+
+# Extra information:
+
+Key Features
+
+- Real-time Market Updates
+
+- Streams live trades from Finnhub WebSocket.
+
+- Supports subscribe / unsubscribe per symbol over WebSocket.
+
+- Automatically reconnects and re-subscribes on WS disconnects.
+
+- Quote Fallback (Reliability)
+
+- Finnhub WebSocket can be idle (pings only, no trades).
+
+- A configurable polling fallback fetches real-time quotes at a fixed interval.
+
+Ensures:
+
+- UI keeps updating
+
+- Alerts still trigger
+
+- App doesn’t appear frozen
+
+This fallback can be enabled/disabled via environment variables.
+
+Price Alerts
+
+- Users can create alerts for a symbol and target price.
+
+- Alerts trigger when price reaches or exceeds the target.
+
+- Triggered alerts cannot be updated.
+
+- Duplicate active alerts (same symbol + price) are prevented.
+
+Push Notifications (FCM)
+
+- Mobile devices can be registered per user.
+
+- When an alert triggers, notifications are sent to all user devices.
+
+- Invalid FCM tokens are automatically cleaned up.
+
+Authentication
+
+- Uses Auth0 JWTs for HTTP and WebSocket authentication.
+
+- Global JWT guard with support for public routes.
+
+# Project Structure (simplified)
+
+src/
+├── alerts/ # Alert CRUD + evaluation
+├── auth/ # JWT strategies & guards
+├── devices/ # Device token registration (FCM)
+├── finnhub/ # WebSocket gateway + fallback logic
+├── market/ # Finnhub REST API access
+├── notifications/ # Firebase Cloud Messaging
+├── users/ # User provisioning (Auth0 sub)
+├── prisma/ # Prisma service & schema
+└── main.ts

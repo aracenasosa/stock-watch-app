@@ -13,7 +13,7 @@ export class NotificationsService {
     private readonly devices: DevicesService,
   ) {}
 
-  // ✅ KEEP THIS METHOD (single alert / single user)
+  // KEEP THIS METHOD (single alert / single user)
   async notifyAlertTriggered(params: {
     userId: string;
     symbol: string;
@@ -32,12 +32,22 @@ export class NotificationsService {
     }
 
     const tokens = devices.map((d) => d.token);
+    this.logger.log(
+      `[FCM] Notifying ${tokens.length} devices for user=${params.userId}`,
+    );
 
     const { summary } = await this.firebase.sendMulticastWithSummary({
       tokens,
       notification: {
         title: `Alert triggered: ${params.symbol}`,
         body: `Price ${params.price} reached target ${params.targetPrice}`,
+      },
+      android: {
+        priority: 'high',
+        notification: {
+          channelId: 'default',
+          priority: 'high',
+        },
       },
       data: {
         type: 'ALERT_TRIGGERED',
@@ -81,6 +91,13 @@ export class NotificationsService {
       notification: {
         title: `Price alert: ${params.symbol}`,
         body: `${params.symbol} is now ${params.price}`,
+      },
+      android: {
+        priority: 'high',
+        notification: {
+          channelId: 'default',
+          priority: 'high',
+        },
       },
       data: {
         type: 'PRICE_ALERT',

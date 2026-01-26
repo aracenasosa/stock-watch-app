@@ -106,15 +106,6 @@ export class FirebaseService implements OnModuleInit {
     const tokens = message.tokens ?? [];
     const batch = await this.sendMulticast(message);
     const summary = this.summarizeBatch(batch, tokens);
-
-    // ✅ This is where summarizeBatch is used
-    console.log('[FCM] batch summary:', {
-      successCount: summary.successCount,
-      failureCount: summary.failureCount,
-      failures: summary.failures.slice(0, 5), // avoid noisy logs
-      invalidTokensCount: summary.invalidTokens.length,
-    });
-
     return { batch, summary };
   }
 }
