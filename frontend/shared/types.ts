@@ -1,6 +1,4 @@
-/**
- * Shared type definitions for the Stock Watch app
- */
+// Shared type definitions for the Stock Watch app
 
 export interface Alert {
   id: string;

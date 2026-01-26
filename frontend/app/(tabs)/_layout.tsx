@@ -1,18 +1,53 @@
-import { Tabs } from "expo-router";
+import { Tabs, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { useTheme } from "@/contexts/theme.context";
+import { useAuthStore } from "@/stores/auth.store";
+import { useMarketStore } from "@/stores/market.store";
+import { useEffect } from "react";
+import { initializeNotifications } from "@/shared/notifications";
 
 export default function TabsLayout() {
+  const { colors, isDark } = useTheme();
+  const { tokens, isHydrated } = useAuthStore();
+  const { connect, disconnect, isConnected } = useMarketStore();
+  const router = useRouter();
+
+  // 1. Auth Guard: Redirect to login if not authenticated
+  useEffect(() => {
+    if (isHydrated && !tokens) {
+      router.replace('/(auth)/login');
+    }
+  }, [isHydrated, tokens]);
+
+  // 2. Persistent WebSocket connection and Notifications for the main app
+  useEffect(() => {
+    if (tokens?.accessToken) {
+      connect(tokens.accessToken);
+      initializeNotifications();
+    }
+    return () => {
+      disconnect();
+    };
+  }, [tokens?.accessToken]);
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
           borderTopWidth: 1,
-          height: 75,
-          paddingTop: 10,
+          height: 80,
+          paddingTop: 8,
+          backgroundColor: colors.tabBar,
+          borderTopColor: colors.tabBarBorder,
         },
-        tabBarIconStyle: { marginTop: 4 },
-        tabBarLabelStyle: { fontSize: 12, marginBottom: 4 },
+        tabBarActiveTintColor: colors.tabActive,
+        tabBarInactiveTintColor: colors.tabInactive,
+        tabBarLabelStyle: { 
+          fontSize: 10, 
+          marginBottom: 8,
+          fontWeight: '500'
+        },
       }}
     >
       <Tabs.Screen
@@ -20,7 +55,16 @@ export default function TabsLayout() {
         options={{
           title: "Watchlist",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="list-circle" size={size} color={color} />
+            <Ionicons name="trending-up" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="graph"
+        options={{
+          title: "Graph",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="bar-chart" size={size} color={color} />
           ),
         }}
       />
@@ -34,11 +78,11 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="chart"
+        name="settings"
         options={{
-          title: "Chart",
+          title: "Settings",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="bar-chart" size={size} color={color} />
+            <Ionicons name="settings-sharp" size={size} color={color} />
           ),
         }}
       />

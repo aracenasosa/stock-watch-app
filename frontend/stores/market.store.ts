@@ -11,11 +11,13 @@ const MAX_TIME_SERIES_POINTS = 100;
 interface MarketState {
   // Price data
   prices: Record<string, number>;
-  prevPrices: Record<string, number>;
+  prevPrices: Record<string, number>; // Previous tick price
+  prevCloses: Record<string, number>; // Previous day close price
   timeSeries: Record<string, TimeSeriesPoint[]>;
 
   // Connection state
   isConnected: boolean;
+  hasReceivedInitialData: boolean;
   subscribedSymbols: Set<string>;
 
   // Internal
@@ -33,8 +35,10 @@ interface MarketState {
 export const useMarketStore = create<MarketState>((set, get) => ({
   prices: {},
   prevPrices: {},
+  prevCloses: {},
   timeSeries: {},
   isConnected: false,
+  hasReceivedInitialData: false,
   subscribedSymbols: new Set(),
   ws: null,
 
@@ -69,6 +73,8 @@ export const useMarketStore = create<MarketState>((set, get) => ({
 
         if (message.type === "tick" || message.type === "quote") {
           const { symbol, price, ts } = message;
+          // Extract prevClose if present (only in 'quote' type)
+          const prevClose = (message as any).prevClose as number | undefined;
 
           set((state) => {
             const currentPrice = state.prices[symbol];
@@ -84,11 +90,17 @@ export const useMarketStore = create<MarketState>((set, get) => ({
 
             return {
               prices: { ...state.prices, [symbol]: price },
+              // Note: 'prevPrices' is used for animation/flashing (previous tick)
               prevPrices: {
                 ...state.prevPrices,
                 [symbol]: currentPrice ?? price,
               },
+              // Store previous close from quote
+              prevCloses: prevClose
+                ? { ...state.prevCloses, [symbol]: prevClose }
+                : state.prevCloses,
               timeSeries: { ...state.timeSeries, [symbol]: newTimeSeries },
+              hasReceivedInitialData: true,
             };
           });
         } else if (message.type === "subscribed") {
@@ -183,6 +195,7 @@ export const useMarketStore = create<MarketState>((set, get) => ({
     set({
       prices: {},
       prevPrices: {},
+      prevCloses: {},
       timeSeries: {},
       subscribedSymbols: new Set(),
     });

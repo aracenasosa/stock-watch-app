@@ -20,7 +20,8 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.caracenasosa.stockwatchapp"
+      "package": "com.caracenasosa.stockwatchapp",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "output": "static",

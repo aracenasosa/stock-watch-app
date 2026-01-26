@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "866174053572",
+    "project_id": "stock-watch-app-be8b2",
+    "storage_bucket": "stock-watch-app-be8b2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:866174053572:android:90b119e5b38aa817b0ed91",
+        "android_client_info": {
+          "package_name": "com.caracenasosa.stockwatchapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDMbj3Os9a4IxuO_hT1NblHmPoVxBfYmtY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

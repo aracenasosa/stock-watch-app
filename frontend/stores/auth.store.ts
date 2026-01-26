@@ -4,6 +4,7 @@ import { AUTH0_AUDIENCE, API_URL } from "@/shared/constants";
 import { auth0 } from "@/shared/auth0";
 import { api } from "@/shared/api";
 import type { User } from "@/shared/types";
+import { jwtDecode } from "jwt-decode";
 
 const TOKEN_KEY = "auth_tokens_v1";
 
@@ -61,16 +62,22 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       await SecureStore.setItemAsync(TOKEN_KEY, JSON.stringify(tokens));
       set({ tokens });
 
-      // IMPORTANT: Call /users/me to create or update user in the database
-      // This ensures the user exists in Prisma with their Auth0 profile data
-      await get().fetchMe();
+      // We decode the idToken to get the user profile data (name, email)
+      const userProfile = res.idToken
+        ? jwtDecode<{ name?: string; email?: string }>(res.idToken)
+        : {};
 
-      console.log("[Auth] Login successful, user created/updated");
+      const { data } = await api.post<User>("/users/sync", {
+        email: userProfile.email,
+        name: userProfile.name,
+      });
+      set({ user: data });
+
       return true;
     } catch (error: any) {
       // Silently ignore user cancellation
       if (error?.code === "a0.session.user_cancelled") {
-        console.log("[Auth] User cancelled login");
+        console.error("[Auth] User cancelled login");
         return false;
       }
       // Re-throw other errors for debugging
@@ -82,7 +89,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   fetchMe: async () => {
     const tokens = get().tokens;
     if (!tokens?.accessToken) {
-      console.log("[Auth] No access token, skipping fetchMe");
+      console.error("[Auth] No access token, skipping fetchMe");
       return;
     }
 
@@ -90,7 +97,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       // Use the shared api client which has the Bearer token interceptor
       const { data } = await api.get<User>("/users/me");
       set({ user: data });
-      console.log("[Auth] User fetched/created:", data.email);
     } catch (error: any) {
       console.error(
         "[Auth] fetchMe failed:",
@@ -99,7 +105,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       // If 401, token might be expired - clear auth state
       if (error.response?.status === 401) {
-        console.log("[Auth] Token expired, clearing session");
+        console.error("[Auth] Token expired, clearing session");
         await get().logout();
       }
     }
@@ -109,9 +115,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       await auth0.webAuth.clearSession();
     } catch (error) {
-      console.log("[Auth] clearSession error (may be expected):", error);
+      console.error("[Auth] clearSession error (may be expected):", error);
     }
     await SecureStore.deleteItemAsync(TOKEN_KEY);
+
+    // Clear other stores
+    require("@/stores/alerts.store").useAlertsStore.getState().clearAlerts();
+
     set({ tokens: null, user: null });
     console.log("[Auth] Logged out");
   },

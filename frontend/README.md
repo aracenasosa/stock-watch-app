@@ -1,50 +1,156 @@
-# Welcome to your Expo app 👋
+# Stock Watch App (Frontend)
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A real-time stock tracking mobile application built with React Native (Expo). This application allows users to watch stock prices in real-time, view historical data on interactive charts, and set price alerts.
 
-## Get started
+## 🚀 Features
 
-1. Install dependencies
+- **Real-time Market Data**: Live stock prices via WebSockets.
+- **Interactive Graphs**: High-performance charts using Victory Native XL and Skia.
+- **Price Alerts**: Interface for managing price monitoring.
+- **Watchlist**: Personalized list of tracked stocks with daily fluctuation indicators.
+- **Authentication**: Secure login via Auth0.
+
+## 🏗 Architecture
+
+The frontend is built using **React Native** with the **Expo Managed Workflow**.
+
+- **Navigation**: File-based routing using `expo-router`.
+- **State Management**: `zustand` for simple, scalable global state (Auth, Market Data, Alerts).
+- **Styling**: `nativewind` (Tailwind CSS) for utility-first styling.
+- **Graphics**: `react-native-skia` for high-performance 2D graphics.
+- **Charts**: `victory-native` for interactive financial data visualization.
+
+## 🛠 Tech Stack & Dependencies
+
+- **React Native** / **Expo SDK 52**
+- **TypeScript**
+- **NativeWind** (Styling)
+- **Victory Native XL** (Charts)
+- **React Native Auth0** (Authentication)
+- **Zustand** (Global State)
+- **Axios** (API Requests)
+
+## ⚡ Setup & Installation
+
+1. **Install dependencies**:
 
    ```bash
    npm install
    ```
 
-2. Start the app
+2. **Start the development server**:
 
    ```bash
    npx expo start
    ```
 
-In the output, you'll find options to open the app in a
+3. **Run on Android**:
+   ```bash
+   npx expo run:android
+   ```
+   _Note: Ensure you have an Android emulator running or a device connected._
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+---
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## Android build setup (Expo + React Native + NDK)
 
-## Get a fresh project
+I have a couple of problems in the prebuild process with android emulator because this project uses native Android modules (Expo modules / RN new architecture). If Android is not configured correctly, builds may fail with NDK/C++ linker errors or Auth0 redirect issues.
 
-When you're ready, run:
+### 1) Install Android SDK + Tools
 
-```bash
-npm run reset-project
+1. Install **Android Studio**.
+2. Open **SDK Manager** → **SDK Tools**.
+3. Install:
+   - **Android SDK Platform-Tools**
+   - **Android SDK Build-Tools**
+   - **Android SDK Command-line Tools (latest)**
+   - **CMake** (the version Android Studio recommends)
+
+---
+
+### 2) SDK path must not contain spaces
+
+The **Android SDK directory should not include whitespace** (spaces) in its path, because it can break NDK tooling.
+
+---
+
+### 3) Install the required NDK version
+
+This project expects:
+
+- **NDK (Side by side): `27.0.12077973`**
+
+Steps:
+
+1. Android Studio → **SDK Manager** → **SDK Tools**
+2. Check **“Show Package Details”**
+3. Under **NDK (Side by side)** install **`27.0.12077973`**
+
+---
+
+### 4) Create `android/local.properties`
+
+Make sure this file exists:
+
+**`android/local.properties`**
+
+```properties
+sdk.dir=<ABSOLUTE_PATH_TO_YOUR_ANDROID_SDK>
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+---
 
-## Learn more
+### 5) Force the NDK version in Gradle
 
-To learn more about developing your project with Expo, look at the following resources:
+Add this to **`android/build.gradle`**:
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+```buildscript {
+  ext {
+    ndkVersion = "27.0.12077973"
+  }
+}
+```
 
-## Join the community
+Add this to **`android/app/build.gradle`**:
 
-Join our community of developers creating universal apps.
+```android
+  ndkVersion rootProject.ext.ndkVersion
+```
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+### 6) Set Scheme in expo and Manifest
+
+Add this to **`app.json`**:
+
+```json
+"expo": {
+    "scheme": "<YOUR_SCHEME>",
+    "android": {
+      "package": "<YOUR_ANDROID_PACKAGE>"
+    }
+}
+```
+
+Add this to **In `android/app/build.gradle` inside defaultConfig**:
+
+```gradle
+defaultConfig {
+  applicationId "<YOUR_ANDROID_PACKAGE>"
+
+  manifestPlaceholders = [
+    auth0Domain: "<YOUR_AUTH0_DOMAIN>",
+    auth0Scheme: "<YOUR_SCHEME_OR_PACKAGE_SCHEME>"
+  ]
+}
+```
+
+### 7) Auth0 Dashboard: Allowed Callback + Logout URLs
+
+**In Auth0 Dashboard → Applications → Your App → Settings**:
+
+```
+Allowed Callback URLs:
+<YOUR_SCHEME>://<YOUR_AUTH0_DOMAIN>/android/<YOUR_ANDROID_PACKAGE>/callback
+
+Allowed Logout URLs:
+<YOUR_SCHEME>://<YOUR_AUTH0_DOMAIN>/android/<YOUR_ANDROID_PACKAGE>/callback
+```

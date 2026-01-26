@@ -114,7 +114,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
 
   // Load saved theme preference
   useEffect(() => {
-    AsyncStorage.getItem(THEME_KEY).then((saved) => {
+    AsyncStorage.getItem(THEME_KEY).then((saved: string | null) => {
       if (saved === 'light' || saved === 'dark') {
         setThemeState(saved);
       } else if (systemColorScheme) {

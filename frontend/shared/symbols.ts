@@ -1,6 +1,4 @@
-/**
- * Stock symbols available for alert creation dropdown
- */
+// Stock symbols available for alert creation dropdown
 export const DROPDOWN_SYMBOLS = [
   "AAPL", // Apple
   "MSFT", // Microsoft
@@ -20,13 +18,11 @@ export const DROPDOWN_SYMBOLS = [
   "PYPL", // PayPal
   "SHOP", // Shopify
   "SPOT", // Spotify
-  "SQ", // Block (Square)
+  "XYZ", // Block (Square)
   "COIN", // Coinbase
 ] as const;
 
-/**
- * Default symbols to show on watchlist and chart on app start
- */
+// Default symbols to show on watchlist and chart on app start
 export const DEFAULT_WATCHLIST_SYMBOLS = [
   "AAPL",
   "MSFT",

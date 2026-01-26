@@ -21,13 +21,29 @@ export const useAlertsStore = create<AlertsState>((set, get) => ({
   error: null,
 
   fetchAlerts: async () => {
+    // Check if we have a valid session before fetching
+    const { tokens } = require("@/stores/auth.store").useAuthStore.getState();
+    if (!tokens?.accessToken) {
+      console.error("[AlertsStore] No access token, skipping fetchAlerts");
+      set({ loading: false, error: null });
+      return;
+    }
+
     set({ loading: true, error: null });
     try {
       const { data } = await api.get<Alert[]>("/alerts");
       set({ alerts: data, loading: false });
     } catch (error: any) {
       console.error("[AlertsStore] fetchAlerts error:", error);
-      set({ error: error.message || "Failed to fetch alerts", loading: false });
+      // Suppress 401s as they often happen during logout race conditions
+      if (error.response?.status !== 401) {
+        set({
+          error: error.message || "Failed to fetch alerts",
+          loading: false,
+        });
+      } else {
+        set({ loading: false });
+      }
     }
   },
 

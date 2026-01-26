@@ -31,7 +31,7 @@ api.interceptors.response.use(
   (error) => {
     // Handle 401 - user needs to re-authenticate
     if (error.response?.status === 401) {
-      console.log("[API] Unauthorized - token may be expired");
+      console.error("[API] Unauthorized - token may be expired");
       // Could trigger logout here if needed
     }
     return Promise.reject(error);
