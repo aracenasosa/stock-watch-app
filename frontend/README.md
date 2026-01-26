@@ -1,156 +1,117 @@
-# Stock Watch App (Frontend)
+# 📱 Stock Watch (Frontend)
 
-A real-time stock tracking mobile application built with React Native (Expo). This application allows users to watch stock prices in real-time, view historical data on interactive charts, and set price alerts.
+A high-performance real-time stock tracking mobile application built with **React Native** and **Expo SDK 52**. Leveraging **Skia** for fluid animations and **Victory Native XL** for professional financial data visualization.
 
-## 🚀 Features
+---
 
-- **Real-time Market Data**: Live stock prices via WebSockets.
-- **Interactive Graphs**: High-performance charts using Victory Native XL and Skia.
-- **Price Alerts**: Interface for managing price monitoring.
-- **Watchlist**: Personalized list of tracked stocks with daily fluctuation indicators.
-- **Authentication**: Secure login via Auth0.
+## 🚀 Key Features
 
-## 🏗 Architecture
+- **⚡ Real-time Market Data**: Instant price updates via WebSockets and REST fallback.
+- **📊 Interactive Charts**: 60fps high-performance financial graphs powered by **Skia**.
+- \*🔔 Price Alerts\*\*: Seamless interface for managing server-side monitoring.
+- **📋 Custom Watchlist**: Personalized stock tracking with daily fluctuation indicators.
+- **🔐 Secure Auth**: Industry-standard authentication via **Auth0**.
 
-The frontend is built using **React Native** with the **Expo Managed Workflow**.
+---
 
-- **Navigation**: File-based routing using `expo-router`.
-- **State Management**: `zustand` for simple, scalable global state (Auth, Market Data, Alerts).
-- **Styling**: `nativewind` (Tailwind CSS) for utility-first styling.
-- **Graphics**: `react-native-skia` for high-performance 2D graphics.
-- **Charts**: `victory-native` for interactive financial data visualization.
+## 🛠 Tech Stack & Key Libraries
 
-## 🛠 Tech Stack & Dependencies
+Beyond the core framework, this app leverages a premium stack for a superior user experience:
 
-- **React Native** / **Expo SDK 52**
-- **TypeScript**
-- **NativeWind** (Styling)
-- **Victory Native XL** (Charts)
-- **React Native Auth0** (Authentication)
-- **Zustand** (Global State)
-- **Axios** (API Requests)
+### **Data & Visuals**
+
+| Library               | Purpose                              |
+| :-------------------- | :----------------------------------- |
+| **Victory Native XL** | Next-gen charting for React Native.  |
+| **react-native-skia** | High-performance 2D graphics engine. |
+| **Zustand**           | Scalable global state management.    |
+| **Axios**             | Robust REST API communication.       |
+
+### **UI & Logic**
+
+| Library             | Purpose                                          |
+| :------------------ | :----------------------------------------------- |
+| **NativeWind**      | Utility-first styling (Tailwind CSS) for mobile. |
+| **Expo Router**     | Type-safe, file-based navigation.                |
+| **React Hook Form** | Efficient form state and validation logic.       |
+| **Zod**             | Schema validation for data integrity.            |
+
+---
+
+## 🧪 Testing
+
+The project is configured with a robust testing environment:
+
+- **Jest** & **Jest Expo**: Primary testing frameworks.
+- **React Native Testing Library**: For high-confidence component testing.
+
+**Run the test suite:**
+
+```bash
+npm test
+```
+
+---
 
 ## ⚡ Setup & Installation
 
-1. **Install dependencies**:
+### 1. Install Dependencies
 
-   ```bash
-   npm install
-   ```
+```bash
+npm install
+```
 
-2. **Start the development server**:
+### 2. Start Expo Server
 
-   ```bash
-   npx expo start
-   ```
+```bash
+# General start
+npx expo start
 
-3. **Run on Android**:
-   ```bash
-   npx expo run:android
-   ```
-   _Note: Ensure you have an Android emulator running or a device connected._
+# Run specifically on Android
+npx expo run:android
+```
 
 ---
 
-## Android build setup (Expo + React Native + NDK)
+## 🤖 Android Native Build Setup (NDK/C++)
 
-I have a couple of problems in the prebuild process with android emulator because this project uses native Android modules (Expo modules / RN new architecture). If Android is not configured correctly, builds may fail with NDK/C++ linker errors or Auth0 redirect issues.
+> [!IMPORTANT]
+> This project uses native Android modules. Failure to configure the NDK correctly will result in build errors or Auth0 redirect failures.
 
-### 1) Install Android SDK + Tools
+### 1. Prerequisites (Android Studio)
 
-1. Install **Android Studio**.
-2. Open **SDK Manager** → **SDK Tools**.
-3. Install:
+1. Open **SDK Manager** → **SDK Tools**.
+2. Install:
    - **Android SDK Platform-Tools**
    - **Android SDK Build-Tools**
    - **Android SDK Command-line Tools (latest)**
-   - **CMake** (the version Android Studio recommends)
+   - **CMake** (latest recommended)
 
----
+### 2. Install Required NDK
 
-### 2) SDK path must not contain spaces
+This project specifically requires **NDK Version: `27.0.12077973`**.
 
-The **Android SDK directory should not include whitespace** (spaces) in its path, because it can break NDK tooling.
+- In SDK Manager → SDK Tools, check **"Show Package Details"**.
+- Install exactly **`27.0.12077973`**.
 
----
+### 3. Local Properties
 
-### 3) Install the required NDK version
-
-This project expects:
-
-- **NDK (Side by side): `27.0.12077973`**
-
-Steps:
-
-1. Android Studio → **SDK Manager** → **SDK Tools**
-2. Check **“Show Package Details”**
-3. Under **NDK (Side by side)** install **`27.0.12077973`**
-
----
-
-### 4) Create `android/local.properties`
-
-Make sure this file exists:
-
-**`android/local.properties`**
+Create `frontend/android/local.properties` (replace path):
 
 ```properties
-sdk.dir=<ABSOLUTE_PATH_TO_YOUR_ANDROID_SDK>
+sdk.dir=C:\\Users\\<USER>\\AppData\\Local\\Android\\Sdk
+```
+
+### 4. Sync Configuration
+
+Once the file is set up, run:
+
+```bash
+npx expo prebuild
 ```
 
 ---
 
-### 5) Force the NDK version in Gradle
-
-Add this to **`android/build.gradle`**:
-
-```buildscript {
-  ext {
-    ndkVersion = "27.0.12077973"
-  }
-}
-```
-
-Add this to **`android/app/build.gradle`**:
-
-```android
-  ndkVersion rootProject.ext.ndkVersion
-```
-
-### 6) Set Scheme in expo and Manifest
-
-Add this to **`app.json`**:
-
-```json
-"expo": {
-    "scheme": "<YOUR_SCHEME>",
-    "android": {
-      "package": "<YOUR_ANDROID_PACKAGE>"
-    }
-}
-```
-
-Add this to **In `android/app/build.gradle` inside defaultConfig**:
-
-```gradle
-defaultConfig {
-  applicationId "<YOUR_ANDROID_PACKAGE>"
-
-  manifestPlaceholders = [
-    auth0Domain: "<YOUR_AUTH0_DOMAIN>",
-    auth0Scheme: "<YOUR_SCHEME_OR_PACKAGE_SCHEME>"
-  ]
-}
-```
-
-### 7) Auth0 Dashboard: Allowed Callback + Logout URLs
-
-**In Auth0 Dashboard → Applications → Your App → Settings**:
-
-```
-Allowed Callback URLs:
-<YOUR_SCHEME>://<YOUR_AUTH0_DOMAIN>/android/<YOUR_ANDROID_PACKAGE>/callback
-
-Allowed Logout URLs:
-<YOUR_SCHEME>://<YOUR_AUTH0_DOMAIN>/android/<YOUR_ANDROID_PACKAGE>/callback
-```
+<p align="center">
+  🚀 Ready to track the market?
+</p>
