@@ -94,7 +94,7 @@ export class FirebaseService implements OnModuleInit {
   async sendMulticast(message: MulticastMessage): Promise<BatchResponse> {
     if (!this.initialized) this.init();
 
-    // ✅ Recommended by firebase-admin for multicast.
+    // Recommended by firebase-admin for multicast.
     // returns BatchResponse with responses: SendResponse[]
     return this.messaging().sendEachForMulticast(message);
   }

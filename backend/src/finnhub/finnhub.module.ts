@@ -5,6 +5,8 @@ import { FinnhubController } from './finnhub.controller';
 import { FinnhubGateway } from './finnhub.gateway';
 import { AlertsModule } from 'src/alerts/alerts.module';
 import { MarketService } from 'src/market/market.service';
+import { WsJwtGuard } from 'src/auth/ws-jwt.guard';
+
 @Module({
   imports: [
     HttpModule.register({
@@ -14,7 +16,7 @@ import { MarketService } from 'src/market/market.service';
     AlertsModule,
   ],
   controllers: [FinnhubController],
-  providers: [FinnhubService, FinnhubGateway, MarketService],
+  providers: [FinnhubService, FinnhubGateway, MarketService, WsJwtGuard],
   exports: [FinnhubService],
 })
 export class FinnhubModule {}

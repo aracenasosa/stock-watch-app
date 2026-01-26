@@ -1,11 +1,7 @@
 import { Injectable, ServiceUnavailableException } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
-import {
-  FinnhubCandles,
-  FinnhubQuote,
-  FinnhubSymbol,
-} from './types/finnhub.types';
+import { FinnhubQuote, FinnhubSymbol } from './types/finnhub.types';
 
 @Injectable()
 export class FinnhubService {

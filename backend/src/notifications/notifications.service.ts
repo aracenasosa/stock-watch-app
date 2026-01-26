@@ -76,7 +76,7 @@ export class NotificationsService {
     };
   }
 
-  // ✅ NEW: batch notification (used by Finnhub ticks)
+  // batch notification (used by Finnhub ticks)
   async notifyAlertsTriggeredBatch(params: {
     userIds: string[];
     symbol: string;

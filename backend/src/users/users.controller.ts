@@ -2,6 +2,10 @@ import { Controller, Get, Post, Req, Body } from '@nestjs/common';
 import { UsersService } from './users.service';
 import type { AuthenticatedRequest } from 'src/auth/types/jwt.types';
 
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+
+@ApiTags('Users')
+@ApiBearerAuth('bearer')
 @Controller('users')
 export class UsersController {
   constructor(private usersService: UsersService) {}

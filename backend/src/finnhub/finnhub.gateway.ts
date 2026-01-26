@@ -11,9 +11,15 @@ import {
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
 import WebSocket from 'ws';
+import { IncomingMessage } from 'http';
 import { WsJwtGuard } from 'src/auth/ws-jwt.guard';
 import { MarketService } from 'src/market/market.service';
 import { AlertsService } from 'src/alerts/alerts.service';
+
+// Extended WebSocket type to include the authenticated user payload
+export interface AuthenticatedWebSocket extends WebSocket {
+  user?: { sub: string };
+}
 
 type ClientMsg =
   | { type: 'subscribe'; symbol: string }
@@ -31,7 +37,7 @@ export class FinnhubGateway
   private readonly logger = new Logger(FinnhubGateway.name);
 
   @WebSocketServer()
-  server?: any;
+  server?: { clients: Set<AuthenticatedWebSocket> };
 
   private finnhubWs?: WebSocket;
 
@@ -45,7 +51,7 @@ export class FinnhubGateway
   private finnhubSubs = new Set<string>();
 
   // What each app client wants
-  private clientSubs = new Map<any, Set<string>>();
+  private clientSubs = new Map<AuthenticatedWebSocket, Set<string>>();
 
   // Fallback polling interval
   private quoteInterval?: NodeJS.Timeout;
@@ -56,6 +62,7 @@ export class FinnhubGateway
   constructor(
     private readonly market: MarketService,
     private readonly alerts: AlertsService,
+    private readonly wsJwtGuard: WsJwtGuard,
   ) {}
 
   // Env helpers
@@ -107,9 +114,6 @@ export class FinnhubGateway
           }
         }
       }
-
-      // We don't remove symbols here; cleanupFinnhubSubs handles removal
-      // by checking both client subscriptions AND active alerts.
     } catch (error) {
       this.logger.error('Failed to refresh global alert subs', error);
     }
@@ -121,38 +125,61 @@ export class FinnhubGateway
       this.finnhubWs?.close();
     } catch {}
   }
-
   // Gateway connection
-  handleConnection(client: any) {
-    if (!this.clientSubs.has(client)) this.clientSubs.set(client, new Set());
+  async handleConnection(client: AuthenticatedWebSocket, req: IncomingMessage) {
+    // In NestJS with WsAdapter (ws library), the second argument is the IncomingMessage (request)
+    const url =
+      req?.url || (client as any)?.url || (client as any)?.upgradeReq?.url;
 
-    client.on('message', (raw: any) => {
-      let parsed: unknown;
+    try {
+      // Enforce authentication during initial handshake
+      const user = await this.wsJwtGuard.validateToken(url);
+      client.user = user;
 
-      // Must be valid JSON
-      try {
-        parsed = JSON.parse(raw.toString());
-      } catch {
-        client.send(JSON.stringify({ type: 'error', message: 'Invalid JSON' }));
-        return;
-      }
+      this.logger.log(`[WS] Authenticated connection: ${user.sub}`);
 
-      // Must match expected shape
-      if (!this.isClientMsg(parsed)) {
-        client.send(
-          JSON.stringify({
-            type: 'error',
-            message: 'Invalid message format',
-          }),
-        );
-        return;
-      }
+      if (!this.clientSubs.has(client)) this.clientSubs.set(client, new Set());
 
-      this.handleClientMessage(parsed, client);
-    });
+      client.on('message', (raw: Buffer) => {
+        let parsed: unknown;
+        try {
+          parsed = JSON.parse(raw.toString());
+        } catch {
+          client.send(
+            JSON.stringify({ type: 'error', message: 'Invalid JSON' }),
+          );
+          return;
+        }
+
+        if (!this.isClientMsg(parsed)) {
+          client.send(
+            JSON.stringify({
+              type: 'error',
+              message: 'Invalid message format',
+            }),
+          );
+          return;
+        }
+
+        this.handleClientMessage(parsed, client);
+      });
+    } catch (e: any) {
+      // Reject unauthorized connection
+      this.logger.warn(
+        `[WS] Unauthorized connection attempt rejected: ${e.message}`,
+      );
+      client.send(
+        JSON.stringify({
+          type: 'error',
+          message: e.message || 'Unauthorized',
+        }),
+      );
+      // Close connection after a small delay to ensure message is sent
+      setTimeout(() => client.close(1008, 'Policy Violation'), 100);
+    }
   }
 
-  async handleDisconnect(client: any) {
+  async handleDisconnect(client: AuthenticatedWebSocket) {
     this.clientSubs.delete(client);
     await this.cleanupFinnhubSubs();
   }
@@ -299,7 +326,10 @@ export class FinnhubGateway
   }
 
   // Client messages
-  private async handleClientMessage(body: ClientMsg, client: any) {
+  private async handleClientMessage(
+    body: ClientMsg,
+    client: AuthenticatedWebSocket,
+  ) {
     const symbol = body.symbol.trim().toUpperCase();
     if (!symbol) return;
 
@@ -327,7 +357,7 @@ export class FinnhubGateway
     }
   }
 
-  private ensureClientSubs(client: any) {
+  private ensureClientSubs(client: AuthenticatedWebSocket) {
     if (!this.clientSubs.has(client)) {
       this.clientSubs.set(client, new Set<string>());
     }
@@ -365,7 +395,7 @@ export class FinnhubGateway
   }
 
   private sendToSubscribers(symbol: string, payload: string) {
-    const clients: Set<any> | undefined = this.server?.clients;
+    const clients = this.server?.clients;
     if (!clients) return;
 
     clients.forEach((client) => {
