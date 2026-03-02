@@ -51,12 +51,10 @@ export const useMarketStore = create<MarketState>((set, get) => ({
     }
 
     const wsUrl = `${WS_URL}?token=${encodeURIComponent(accessToken)}`;
-    console.log("[MarketStore] Connecting to WebSocket...");
 
     const ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {
-      console.log("[MarketStore] WebSocket connected");
       set({ isConnected: true, ws });
 
       // Re-subscribe to all symbols
@@ -104,9 +102,9 @@ export const useMarketStore = create<MarketState>((set, get) => ({
             };
           });
         } else if (message.type === "subscribed") {
-          console.log(`[MarketStore] Subscribed to ${message.symbol}`);
+          // No-op
         } else if (message.type === "unsubscribed") {
-          console.log(`[MarketStore] Unsubscribed from ${message.symbol}`);
+          // No-op
         } else if (message.type === "error") {
           console.error("[MarketStore] WS Error:", message.message);
         }
@@ -121,7 +119,6 @@ export const useMarketStore = create<MarketState>((set, get) => ({
     };
 
     ws.onclose = (event) => {
-      console.log("[MarketStore] WebSocket closed:", event.code);
       set({ isConnected: false, ws: null });
 
       // Attempt reconnect after 3 seconds if we have an access token
@@ -129,7 +126,7 @@ export const useMarketStore = create<MarketState>((set, get) => ({
         setTimeout(() => {
           const { isConnected: stillConnected } = get();
           if (!stillConnected) {
-            console.log("[MarketStore] Attempting to reconnect...");
+            console.warn("[MarketStore] Attempting to reconnect...");
             get().connect(accessToken);
           }
         }, 3000);

@@ -119,6 +119,5 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     require("@/stores/alerts.store").useAlertsStore.getState().clearAlerts();
 
     set({ tokens: null, user: null });
-    console.log("[Auth] Logged out");
   },
 }));
