@@ -1,6 +1,0 @@
-nodeLinker: hoisted
-
-onlyBuiltDependencies:
-  - '@shopify/react-native-skia'
-  - browser-tabs-lock
-  - unrs-resolver

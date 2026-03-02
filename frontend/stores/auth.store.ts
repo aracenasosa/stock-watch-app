@@ -1,7 +1,6 @@
 import { create } from "zustand";
 import * as SecureStore from "expo-secure-store";
-import { AUTH0_AUDIENCE, API_URL } from "@/shared/constants";
-import { auth0 } from "@/shared/auth0";
+import { loginWithAuth0, logoutFromAuth0 } from "@/shared/auth0";
 import { api } from "@/shared/api";
 import type { User } from "@/shared/types";
 import { jwtDecode } from "jwt-decode";
@@ -48,10 +47,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   login: async () => {
     try {
-      const res = await auth0.webAuth.authorize({
-        scope: "openid profile email",
-        audience: AUTH0_AUDIENCE,
-      });
+      const res = await loginWithAuth0();
 
       const tokens: Tokens = {
         accessToken: res.accessToken,
@@ -76,7 +72,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       return true;
     } catch (error: any) {
       // Silently ignore user cancellation
-      if (error?.code === "a0.session.user_cancelled") {
+      if (error?.code === "user_cancelled") {
         console.error("[Auth] User cancelled login");
         return false;
       }
@@ -113,7 +109,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   logout: async () => {
     try {
-      await auth0.webAuth.clearSession();
+      await logoutFromAuth0();
     } catch (error) {
       console.error("[Auth] clearSession error (may be expected):", error);
     }

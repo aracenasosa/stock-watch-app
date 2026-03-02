@@ -10,7 +10,7 @@ A high-performance real-time stock tracking mobile application built with **Reac
 - **📊 Interactive Charts**: 60fps high-performance financial graphs powered by **Victory Native** and **Skia**.
 - **🔔 Price Alerts**: Seamless interface for managing server-side monitoring and push notifications.
 - **📋 Custom Watchlist**: Personalized stock tracking with live daily fluctuation indicators.
-- **🔐 Secure Auth**: Industry-standard authentication via **react-native-auth0**.
+- **🔐 Secure Auth**: Industry-standard authentication via **expo-auth-session**.
 
 ---
 
@@ -30,13 +30,13 @@ This app leverages a premium, modern stack for a superior user experience:
 
 ### **UI & Logic**
 
-| Library             | Purpose                                                      |
-| :------------------ | :----------------------------------------------------------- |
-| **NativeWind (v4)** | Utility-first styling (Tailwind CSS) with Native support.    |
-| **Expo Router**     | Type-safe, file-based navigation system.                     |
-| **Auth0**           | Enterprise-grade identity management (`react-native-auth0`). |
-| **Reanimated**      | Powerful animations and gesture handling.                    |
-| **React Hook Form** | Efficient form state and validation logic.                   |
+| Library             | Purpose                                                     |
+| :------------------ | :---------------------------------------------------------- |
+| **NativeWind (v4)** | Utility-first styling (Tailwind CSS) with Native support.   |
+| **Expo Router**     | Type-safe, file-based navigation system.                    |
+| **Auth0**           | Enterprise-grade identity management (`expo-auth-session`). |
+| **Reanimated**      | Powerful animations and gesture handling.                   |
+| **React Hook Form** | Efficient form state and validation logic.                  |
 
 ---
 

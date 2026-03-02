@@ -1,5 +1,4 @@
 import axios from "axios";
-import { useAuthStore } from "@/stores/auth.store";
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL!;
 
@@ -16,6 +15,8 @@ export const api = axios.create({
 // Request interceptor to add Authorization header
 api.interceptors.request.use(
   (config) => {
+    // Lazy require to avoid static import cycle with auth.store
+    const { useAuthStore } = require("@/stores/auth.store");
     const tokens = useAuthStore.getState().tokens;
     if (tokens?.accessToken) {
       config.headers.Authorization = `Bearer ${tokens.accessToken}`;
