@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL!;
+const API_BASE_URL = process.env.EXPO_PUBLIC_BACKEND_API_URL!;
 
 /**
  * Axios instance with automatic Bearer token injection
